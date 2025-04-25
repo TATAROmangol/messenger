@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Messenger App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+        }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .chat-container {
+            height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-list {
+            height: calc(100% - 120px);
+            overflow-y: auto;
+        }
+
+        .user-message {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .other-message {
+            background-color: #e9ecef;
+            border-radius: 15px 15px 15px 0;
+        }
+
+        .online-user {
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        #typingIndicator {
+            height: 20px;
+            font-style: italic;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container py-4">
+    <!-- Авторизация -->
+    <div id="authSection" class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Вход в Messenger</h3>
+                    <form id="authForm">
+                        <div class="mb-3">
+                            <label for="credential" class="form-label">Логин или Email</label>
+                            <input type="text" class="form-control" id="credential" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Войти</button>
+                        <div class="text-center mt-3">
+                            <a href="#" id="showRegister">Создать аккаунт</a>
+                        </div>
+                    </form>
+
+                    <form id="registerForm" style="display: none;">
+                        <h5 class="text-center mb-3">Регистрация</h5>
+                        <div class="mb-3">
+                            <label for="login" class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="login" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pass" class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="pass" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Имя</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+                        <div class="text-center mt-3">
+                            <a href="#" id="showLogin">Уже есть аккаунт?</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной интерфейс чата -->
+    <div id="chatSection" class="row" style="display: none;">
+        <div class="col-md-3">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Пользователи</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul id="userList" class="list-group list-group-flush">
+                        <!-- Список пользователей -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Диалоги</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul id="dialogList" class="list-group list-group-flush">
+                        <!-- Список диалогов -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card shadow chat-container">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 id="currentDialogTitle" class="mb-0">Выберите диалог</h5>
+                    <div id="typingIndicator"></div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="messageList" class="message-list p-3">
+                        <!-- Сообщения -->
+                    </div>
+                    <div class="p-3 border-top">
+                        <form id="messageForm" class="d-flex">
+                            <input type="text" id="messageInput" class="form-control me-2"
+                                   placeholder="Введите сообщение..." disabled>
+                            <button type="submit" class="btn btn-primary" disabled>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+
+<script>
+    let currentUser = null;
+    let currentDialog = null;
+    let socket = null;
+
+    // Функция для получения куки по имени
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    $(document).ready(function () {
+
+        const token = localStorage.getItem('jwt_token') || getCookie('user_jwt');
+        console.log(token)
+        if (token && token !== 'undefined') {
+            console.log("ready")
+            $('#authSection').hide();
+            $('#chatSection').show();
+            initWebSocket();
+            loadDialogs();
+        }
+
+
+        // Переключение между формами
+        $('#showRegister').click(function (e) {
+            e.preventDefault();
+            $('#authForm').hide();
+            $('#registerForm').show();
+        });
+
+        $('#showLogin').click(function (e) {
+            e.preventDefault();
+            $('#registerForm').hide();
+            $('#authForm').show();
+        });
+
+        // Авторизация
+        $('#authForm').submit(function (e) {
+            e.preventDefault();
+            const credential = $('#credential').val();
+            const password = $('#password').val();
+            $.ajax({
+                url: '/api/auth/login',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    credential: credential,
+                    pass: password
+                }),
+                success: function (response) {
+                    console.log(response)
+                    response = JSON.parse(response)
+                    currentUser = {
+                        id: response.userId,
+                        token: response.token
+                    };
+                    console.log("auth")
+                    localStorage.setItem('jwt_token', response.token);
+                    initWebSocket();
+                    $('#authSection').hide();
+                    $('#chatSection').show();
+                    loadDialogs();
+                },
+                error: function (xhr) {
+                    alert('Ошибка авторизации: ' + (xhr.responseJSON?.message || xhr.statusText));
+                }
+            });
+        });
+
+        // Регистрация
+        $('#registerForm').submit(function (e) {
+            e.preventDefault();
+            const data = {
+                login: $('#login').val(),
+                email: $('#email').val(),
+                pass: $('#pass').val(),
+                name: $('#name').val()
+            };
+
+            $.ajax({
+                url: '/api/auth/register',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    alert('Регистрация успешна! Теперь войдите.');
+                    localStorage.setItem('jwt_token', response.token);
+                    document.location.reload()
+                    //$('#registerForm').hide();
+                    //$('#authForm').show();
+                },
+                error: function (xhr) {
+                    alert('Ошибка регистрации: ' + (xhr.responseJSON?.message || xhr.statusText));
+                }
+            });
+        });
+
+        // Отправка сообщения
+        $('#messageForm').submit(function (e) {
+            console.log("send")
+            e.preventDefault();
+            const message = $('#messageInput').val();
+            console.log(socket, message.trim())
+            if (message.trim() && socket) {
+                // Отправка через WebSocket
+                socket.emit('msg', {
+                    dialogId: currentDialog.id,
+                    text: message,
+                    //senderId: currentUser.id,
+                    timestamp: new Date().toISOString()
+                });
+
+                // Можно сразу добавить сообщение в интерфейс как "отправленное"
+                addMessageToChat({
+                    text: message,
+                    //sender_id: currentUser.id,
+                    created_at: new Date().toISOString(),
+                    is_read: false
+                });
+
+                $('#messageInput').val('');
+            }
+        });
+    });
+
+    function initWebSocket() {
+        socket = io( {
+
+            path: '/socket.io',
+            pingInterval: 10000,         // Пинг вебсокета
+            pingTimeout: 5000,           // Таймаут пинга
+            transports: ['websocket']
+            //transports: ['polling'],
+
+        });
+
+        socket.on('msg', function (data) {
+            console.log("msg: ",data)
+            //if (currentDialog && currentDialog.id === data.chat_id) {
+                addMessageToChat(data);
+            //}
+        });
+    }
+
+    function loadDialogs() {
+        $.ajax({
+            url: '/api/chat/',
+            method: 'GET',
+
+            success: function (response) {
+                response = JSON.parse(response)
+                $('#dialogList').empty();
+                response.chats.forEach(chatId => {
+                    $('#dialogList').append(`
+              <li class="list-group-item dialog-item" data-chat-id="${chatId}">
+                Диалог #${chatId}
+              </li>
+            `);
+                });
+
+                $('.dialog-item').click(function () {
+                    const chatId = $(this).data('chat-id');
+                    selectDialog(chatId);
+                });
+            }
+        });
+    }
+
+    function selectDialog(chatId) {
+        $.ajax({
+            url: `/api/chat/${chatId}/messages`,
+            method: 'GET',
+            // headers: {
+            //     'Authorization': `Bearer ${currentUser.token}`
+            // },
+            success: function (response) {
+                response = JSON.parse(response)
+                console.log(response)
+                currentDialog = {id: chatId};
+                $('#currentDialogTitle').text(`Диалог #${chatId}`);
+                $('#messageList').empty();
+
+                $('#messageInput').prop('disabled', false);
+                $('#messageForm button').prop('disabled', false);
+                response.forEach(message => {
+                    addMessageToChat(message);
+                });
+
+            }
+        });
+    }
+
+    function addMessageToChat(message) {
+        console.log(message)
+        //const isCurrentUser = message.sender_id === currentUser.id;
+        const isCurrentUser = true;
+        const messageClass = isCurrentUser ? 'user-message' : 'other-message';
+        const alignClass = isCurrentUser ? 'ms-auto' : 'me-auto';
+
+        $('#messageList').append(`
+        <div class="d-flex mb-2">
+          <div class="${alignClass}">
+            <div class="p-3 ${messageClass}" style="max-width: 70%;">
+              ${message.text}
+              <div class="text-end mt-1">
+                <small class="text-muted">${new Date(message.created_at).toLocaleTimeString()}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+
+        $('#messageList').scrollTop($('#messageList')[0].scrollHeight);
+    }
+</script>
+</body>
+</html>
