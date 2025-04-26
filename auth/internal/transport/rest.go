@@ -51,15 +51,15 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.SetCookie(w, &http.Cookie{
-			Name:    JWTCookieName,
-			Value:   stringKey,
-			Expires: time.Now().Add(7*24*time.Hour),
-			Path:    "/",
-			Domain:   "", 
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
+		// http.SetCookie(w, &http.Cookie{
+		// 	Name:    JWTCookieName,
+		// 	Value:   stringKey,
+		// 	Expires: time.Now().Add(7*24*time.Hour),
+		// 	Path:    "/",
+		// 	Domain:   "", 
+		// 	HttpOnly: true,
+		// 	SameSite: http.SameSiteLaxMode,
+		// })
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(RegisterResponse{Token: stringKey}); err != nil {
 			logger.Warn(r.Context(), "Error in JSON encoder", zap.Error(err))

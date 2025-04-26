@@ -45,7 +45,7 @@ func (h *Handler) GetChatsHandler() http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(GetChatsResponse{chats}); err != nil {
+		if err := json.NewEncoder(w).Encode(GetChatsResponse{id, chats}); err != nil {
 			logger.GetFromCtx(r.Context()).ErrorContext(r.Context(), "error in json encoder", err)
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 			return

@@ -82,7 +82,7 @@ func (s *ChatStorage) SendMessage(ctx context.Context, userId, chatId int, text 
 
 func (s *ChatStorage) GetMessages(ctx context.Context, chatID int, limit, offset int) ([]domain.Message, error) {
 	query := `
-		SELECT text, created_at, is_read 
+		SELECT sender_id,text, created_at, is_read 
 		FROM messages 
 		WHERE chat_id = $1 
 		ORDER BY created_at ASC 
@@ -98,7 +98,7 @@ func (s *ChatStorage) GetMessages(ctx context.Context, chatID int, limit, offset
 	var messages []domain.Message
 	for rows.Next() {
 		var msg domain.Message
-		err := rows.Scan(&msg.Text, &msg.CreatedAt, &msg.IsRead)
+		err := rows.Scan(&msg.SenderId, &msg.Text, &msg.CreatedAt, &msg.IsRead)
 		if err != nil {
 			return nil, err
 		}

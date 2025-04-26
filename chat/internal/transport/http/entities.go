@@ -3,6 +3,7 @@ package httpserver
 import "chat/internal/domain"
 
 type GetChatsResponse struct {
+	UserId int  `json:"user_id"`
 	Chats []int `json:"chats"`
 }
 

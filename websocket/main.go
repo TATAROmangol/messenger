@@ -26,7 +26,7 @@ func main() {
 	server.OnEvent("/", "msg", func(s socketio.Conn, msg any) {
 		fmt.Println("msg from ", s.ID(), " : ", msg)
 		s.SetContext(msg)
-		s.Emit("msg", msg)
+		server.BroadcastToNamespace("/", "msg", msg)
 
 	})
 

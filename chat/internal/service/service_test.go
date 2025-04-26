@@ -262,9 +262,9 @@ func TestChatSvc_GetMessages(t *testing.T) {
 			MockBehavor: func(chatID, limit, offset int) {
 				cr.EXPECT().
 					GetMessages(gomock.Any(), chatID, limit, offset).
-					Return([]domain.Message{{"test", time.Unix(1,1), true}}, nil)
+					Return([]domain.Message{{"test", "test", time.Unix(1,1), true}}, nil)
 			},
-			want:    []domain.Message{{"test", time.Unix(1,1), true}},
+			want:    []domain.Message{{"test", "test", time.Unix(1,1), true}},
 			wantErr: false,
 		},
 		{
@@ -292,9 +292,9 @@ func TestChatSvc_GetMessages(t *testing.T) {
 			MockBehavor: func(chatID, limit, offset int) {
 				cr.EXPECT().
 					GetMessages(gomock.Any(), chatID, limit, 0).
-					Return([]domain.Message{{"test", time.Unix(1,1), true}}, nil)
+					Return([]domain.Message{{"test","test", time.Unix(1,1), true}}, nil)
 			},
-			want:    []domain.Message{{"test", time.Unix(1,1), true}},
+			want:    []domain.Message{{"test","test", time.Unix(1,1), true}},
 			wantErr: false,
 		},
 		{
@@ -307,9 +307,9 @@ func TestChatSvc_GetMessages(t *testing.T) {
 			MockBehavor: func(chatID, limit, offset int) {	
 				cr.EXPECT().
 					GetMessages(gomock.Any(), chatID, 10, offset).
-					Return([]domain.Message{{"test", time.Unix(1,1), true}}, nil)
+					Return([]domain.Message{{"test","test", time.Unix(1,1), true}}, nil)
 			},
-			want:    []domain.Message{{"test", time.Unix(1,1), true}},
+			want:    []domain.Message{{"test","test", time.Unix(1,1), true}},
 			wantErr: false,
 		},
 	}
